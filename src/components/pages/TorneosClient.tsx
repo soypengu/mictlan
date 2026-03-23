@@ -104,25 +104,17 @@ export function TorneosClient({ initialState }: { initialState: PublicState }) {
           title="Bracket · Eliminatorias finales"
           subtitle="Así se jugarán las llaves cuando termine la fase de tabla."
         >
-          <div className="grid gap-6 lg:grid-cols-2">
-            <TournamentBracket title="Tournament Bracket" leftMatches={bracketLeftMatches} />
-            <div className="rounded-2xl border border-card-border bg-card px-5 py-5">
-              <div className="text-sm font-semibold">Cómo funcionan</div>
-              <div className="mt-2 text-sm leading-7 text-muted">
-                La fase final se juega en eliminación simple. El Top 4 de la tabla clasifica al bracket y se empareja
-                por seed: 1 vs 4 y 2 vs 3. Los ganadores avanzan a semifinales/final según el formato anunciado.
-              </div>
-              <div className="mt-4 grid gap-3">
-                <RuleRow title="Seeds">
-                  Se toman según la posición en tabla (puntos y desempates).
-                </RuleRow>
-                <RuleRow title="Series">
-                  El Bo (Best of) y mapas se anuncian en Discord.
-                </RuleRow>
-                <RuleRow title="Confirmación">
-                  Cuando se confirmen llaves y horarios, aquí dejará de decir “Próximamente”.
-                </RuleRow>
-              </div>
+          <TournamentBracket title="Tournament Bracket" leftMatches={bracketLeftMatches} />
+          <div className="mt-6 rounded-2xl border border-card-border bg-card px-5 py-5">
+            <div className="text-sm font-semibold">Cómo funcionan</div>
+            <div className="mt-2 text-sm leading-7 text-muted">
+              La fase final se juega en eliminación simple. El Top 4 de la tabla clasifica al bracket y se empareja por
+              seed: 1 vs 4 y 2 vs 3. Los ganadores avanzan a semifinales/final según el formato anunciado.
+            </div>
+            <div className="mt-4 grid gap-3 sm:grid-cols-3">
+              <RuleRow title="Seeds">Se toman según la posición en tabla (puntos y desempates).</RuleRow>
+              <RuleRow title="Series">El Bo (Best of) y mapas se anuncian en Discord.</RuleRow>
+              <RuleRow title="Confirmación">Cuando se confirmen llaves y horarios, aquí dejará de decir “Próximamente”.</RuleRow>
             </div>
           </div>
         </Section>

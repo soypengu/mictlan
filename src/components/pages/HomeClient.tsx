@@ -175,19 +175,17 @@ function VersusCard({ teamA, teamB, startsAt }: { teamA: string; teamB: string; 
     : "Próximamente";
 
   return (
-    <div className="rounded-2xl border border-card-border bg-background/10 px-5 py-5 backdrop-blur">
+    <div className="rounded-2xl border border-card-border bg-card/55 px-5 py-5 backdrop-blur">
       <div className="flex items-center justify-between gap-3">
-        <div className="text-xs font-semibold uppercase tracking-wide text-muted">Versus</div>
+        <div className="text-xs font-semibold uppercase tracking-wide text-muted">Próximo versus</div>
         <div className="rounded-full border border-card-border bg-background/20 px-3 py-1 text-xs font-semibold text-muted">
           {label}
         </div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-4">
+      <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
         <VersusTeam name={teamA} align="left" />
-        <div className="rounded-full border border-card-border bg-background/20 px-3 py-1 text-xs font-semibold text-muted">
-          VS
-        </div>
+        <div className="rounded-full border border-card-border bg-background/20 px-4 py-2 text-sm font-semibold text-muted">VS</div>
         <VersusTeam name={teamB} align="right" />
       </div>
     </div>
@@ -196,11 +194,16 @@ function VersusCard({ teamA, teamB, startsAt }: { teamA: string; teamB: string; 
 
 function VersusTeam({ name, align }: { name: string; align: "left" | "right" }) {
   return (
-    <div className={["flex min-w-0 items-center gap-3", align === "right" ? "flex-row-reverse text-right" : ""].join(" ")}>
-      <div className="h-11 w-11 rounded-xl border border-card-border bg-background/30" />
+    <div
+      className={[
+        "flex min-w-0 items-center gap-3",
+        align === "right" ? "flex-row-reverse text-right" : "",
+      ].join(" ")}
+    >
+      <div className="h-12 w-12 shrink-0 rounded-2xl border border-card-border bg-background/30" />
       <div className="min-w-0">
         <div className="truncate text-sm font-semibold">{name}</div>
-        <div className="text-xs text-muted">Próximamente</div>
+        <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">Próximamente</div>
       </div>
     </div>
   );
