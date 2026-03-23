@@ -36,6 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# app data
+/data/state.json
+/data/state.tmp.json
+!/data/.gitkeep
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
