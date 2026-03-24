@@ -1,4 +1,4 @@
-import { verifyAdminToken } from "@/lib/adminAuth";
+import { requireAdminUser } from "@/lib/adminSession";
 import { getState, setState } from "@/lib/stateStore";
 import type { PublicState } from "@/lib/types";
 
@@ -14,7 +14,9 @@ function isPublicState(v: unknown): v is PublicState {
     Array.isArray(v.topPlayerKills) &&
     Array.isArray(v.topTeams) &&
     Array.isArray(v.upcomingScrims) &&
-    Array.isArray(v.upcomingTournaments)
+    Array.isArray(v.upcomingTournaments) &&
+    Array.isArray(v.upcomingVersus) &&
+    Array.isArray(v.clanes)
   );
 }
 
@@ -26,15 +28,15 @@ function unauthorized(reason: string) {
 }
 
 export async function GET(request: Request) {
-  const auth = verifyAdminToken(request);
-  if (!auth.ok) return unauthorized(auth.reason);
+  const user = await requireAdminUser(request);
+  if (!user) return unauthorized("unauthorized");
   const state = await getState();
   return Response.json(state, { headers: { "Cache-Control": "no-store" } });
 }
 
 export async function PUT(request: Request) {
-  const auth = verifyAdminToken(request);
-  if (!auth.ok) return unauthorized(auth.reason);
+  const user = await requireAdminUser(request);
+  if (!user) return unauthorized("unauthorized");
   const body = (await request.json().catch(() => null)) as unknown;
   if (!isPublicState(body)) {
     return Response.json(

@@ -81,5 +81,9 @@ export const mockState: PublicState = {
     },
   ],
   upcomingVersus: [{ id: "pv-1", teamA: "Equipo A", teamB: "Equipo B" }],
+  clanes: [
+    { id: "c-1", name: "Kukulcán" },
+    { id: "c-2", name: "Xólotl" },
+  ],
 };
 

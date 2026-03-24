@@ -20,7 +20,7 @@ export function DataTable<Row extends { pos: number }>({
   return (
     <div className="overflow-hidden rounded-2xl border border-card-border bg-background/20 ma-fade-up">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full text-sm sm:min-w-[640px]">
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <thead className="border-b border-card-border bg-background/20">
             <tr>
@@ -28,7 +28,7 @@ export function DataTable<Row extends { pos: number }>({
                 <th
                   key={c.key}
                   className={[
-                    "px-4 py-3 text-xs font-semibold uppercase tracking-wide text-muted",
+                    "whitespace-nowrap px-3 py-2.5 text-xs font-semibold uppercase tracking-wide text-muted sm:px-4 sm:py-3",
                     c.align === "right"
                       ? "text-right"
                       : c.align === "center"
@@ -52,7 +52,7 @@ export function DataTable<Row extends { pos: number }>({
                   <td
                     key={c.key}
                     className={[
-                      "px-4 py-3",
+                      "whitespace-nowrap px-3 py-2.5 sm:px-4 sm:py-3",
                       c.align === "right"
                         ? "text-right"
                         : c.align === "center"

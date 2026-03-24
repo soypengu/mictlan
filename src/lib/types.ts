@@ -59,6 +59,11 @@ export type UpcomingVersus = {
   startsAt?: ISODateTime;
 };
 
+export type Clan = {
+  id: string;
+  name: string;
+};
+
 export type PublicState = {
   updatedAt: ISODateTime;
   activeTournament?: Tournament;
@@ -68,5 +73,6 @@ export type PublicState = {
   upcomingScrims: UpcomingEvent[];
   upcomingTournaments: UpcomingEvent[];
   upcomingVersus: UpcomingVersus[];
+  clanes: Clan[];
 };
 

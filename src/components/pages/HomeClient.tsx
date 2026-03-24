@@ -249,13 +249,13 @@ function LatamTimeTable() {
   return (
     <div className="overflow-hidden rounded-2xl border border-card-border bg-background/10 backdrop-blur">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full text-sm sm:min-w-[640px]">
           <thead className="border-b border-card-border bg-background/20">
             <tr>
-              <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted">
+              <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-muted sm:px-4 sm:py-3">
                 País
               </th>
-              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-muted">
+              <th className="whitespace-nowrap px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wide text-muted sm:px-4 sm:py-3">
                 Hora local
               </th>
             </tr>
@@ -266,8 +266,10 @@ function LatamTimeTable() {
                 key={z.timeZone}
                 className="border-b border-card-border/70 last:border-b-0 hover:bg-background/10"
               >
-                <td className="px-4 py-3">{z.label}</td>
-                <td className="px-4 py-3 text-right text-muted">{fmtDate(z.timeZone)}</td>
+                <td className="whitespace-nowrap px-3 py-2.5 sm:px-4 sm:py-3">{z.label}</td>
+                <td className="whitespace-nowrap px-3 py-2.5 text-right text-muted sm:px-4 sm:py-3">
+                  {fmtDate(z.timeZone)}
+                </td>
               </tr>
             ))}
           </tbody>

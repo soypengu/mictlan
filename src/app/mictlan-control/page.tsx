@@ -1,9 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useMemo, useState } from "react";
 
 import { EditableTable } from "@/components/admin/EditableTable";
-import type { PublicState, Scrim, StandingRow, Tournament, UpcomingEvent, UpcomingVersus } from "@/lib/types";
+import type {
+  Clan,
+  PlayerKillsRow,
+  PublicState,
+  Scrim,
+  StandingRow,
+  TeamRankingRow,
+  Tournament,
+  UpcomingEvent,
+  UpcomingVersus,
+} from "@/lib/types";
 
 type Status =
   | { kind: "idle" }
@@ -20,25 +31,15 @@ function emptyState(): PublicState {
     upcomingScrims: [],
     upcomingTournaments: [],
     upcomingVersus: [],
-  };
-}
-
-function authHeaders(token: string) {
-  return {
-    "x-admin-token": token,
-    "Content-Type": "application/json",
+    clanes: [],
   };
 }
 
 export default function AdminPage() {
-  const [token, setToken] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [state, setState] = useState<PublicState | null>(null);
-
-  useEffect(() => {
-    const saved = sessionStorage.getItem("mictlan_admin_token");
-    if (saved) setToken(saved);
-  }, []);
 
   const standingsColumns = useMemo(
     () => [
@@ -109,22 +110,21 @@ export default function AdminPage() {
     [],
   );
 
+  const clanesColumns = useMemo(
+    () => [
+      { key: "id", label: "ID", type: "text" as const, width: "180px" },
+      { key: "name", label: "Nombre", type: "text" as const, width: "minmax(240px, 1fr)" },
+    ],
+    [],
+  );
+
   async function load() {
-    if (!token.trim()) {
-      setStatus({ kind: "error", message: "Ingresa el ADMIN_TOKEN para continuar." });
-      return;
-    }
-    sessionStorage.setItem("mictlan_admin_token", token.trim());
     setStatus({ kind: "loading" });
-    const res = await fetch("/api/admin/state", { headers: authHeaders(token.trim()) });
+    const res = await fetch("/api/admin/state", { cache: "no-store" });
     if (!res.ok) {
-      const err = await res.json().catch(() => null);
       setStatus({
         kind: "error",
-        message:
-          typeof err?.reason === "string"
-            ? `No autorizado (${err.reason}).`
-            : "No autorizado.",
+        message: res.status === 401 ? "No autorizado. Inicia sesión." : "No se pudo cargar el estado.",
       });
       return;
     }
@@ -133,20 +133,41 @@ export default function AdminPage() {
     setStatus({ kind: "ok", message: "Estado cargado." });
   }
 
-  async function save() {
-    if (!state) return;
-    if (!token.trim()) {
-      setStatus({ kind: "error", message: "Ingresa el ADMIN_TOKEN para guardar." });
+  async function login() {
+    if (!email.trim() || !password) {
+      setStatus({ kind: "error", message: "Ingresa email y contraseña." });
       return;
     }
+    setStatus({ kind: "loading" });
+    const res = await fetch("/api/admin/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: email.trim(), password }),
+    });
+    if (!res.ok) {
+      setStatus({ kind: "error", message: "Credenciales inválidas." });
+      return;
+    }
+    await load();
+  }
+
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" }).catch(() => null);
+    setState(null);
+    setStatus({ kind: "idle" });
+    setPassword("");
+  }
+
+  async function save() {
+    if (!state) return;
     setStatus({ kind: "saving" });
     const res = await fetch("/api/admin/state", {
       method: "PUT",
-      headers: authHeaders(token.trim()),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(state),
     });
     if (!res.ok) {
-      setStatus({ kind: "error", message: "Error al guardar el estado." });
+      setStatus({ kind: "error", message: res.status === 401 ? "Sesión expirada. Inicia sesión." : "Error al guardar." });
       return;
     }
     const next = (await res.json()) as PublicState;
@@ -169,12 +190,19 @@ export default function AdminPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <a
+              <Link
                 href="/"
                 className="rounded-full border border-card-border bg-card px-4 py-2 text-xs font-semibold text-foreground transition-colors hover:border-brand/60"
               >
                 Ver web
-              </a>
+              </Link>
+              <button
+                type="button"
+                onClick={logout}
+                className="rounded-full border border-card-border bg-background/30 px-4 py-2 text-xs font-semibold transition-colors hover:border-brand/60"
+              >
+                Salir
+              </button>
               <button
                 type="button"
                 onClick={save}
@@ -186,35 +214,84 @@ export default function AdminPage() {
             </div>
           </div>
 
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-            <input
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-              placeholder="ADMIN_TOKEN"
-              className="w-full rounded-2xl border border-card-border bg-background/30 px-4 py-3 text-sm text-foreground outline-none focus:border-brand/60 sm:max-w-md"
-            />
-            <button
-              type="button"
-              onClick={load}
-              disabled={status.kind === "loading"}
-              className="rounded-2xl border border-card-border bg-card px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:border-brand/60 disabled:opacity-50"
-            >
-              Cargar estado
-            </button>
-            <div className="text-sm text-muted">
-              {status.kind === "idle"
-                ? "Listo."
-                : status.kind === "loading"
-                  ? "Cargando..."
-                  : status.kind === "saving"
-                    ? "Guardando..."
-                    : status.kind === "ok"
-                      ? status.message
-                      : status.kind === "error"
+          {!state ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+              <div className="grid gap-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted">Email</div>
+                <input
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@tudominio.com"
+                  className="w-full rounded-2xl border border-card-border bg-background/30 px-4 py-3 text-sm text-foreground outline-none focus:border-brand/60"
+                />
+              </div>
+              <div className="grid gap-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-muted">Contraseña</div>
+                <input
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  type="password"
+                  className="w-full rounded-2xl border border-card-border bg-background/30 px-4 py-3 text-sm text-foreground outline-none focus:border-brand/60"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={load}
+                  disabled={status.kind === "loading"}
+                  className="rounded-2xl border border-card-border bg-card px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:border-brand/60 disabled:opacity-50"
+                >
+                  Cargar
+                </button>
+                <button
+                  type="button"
+                  onClick={login}
+                  disabled={status.kind === "loading"}
+                  className="rounded-2xl bg-brand px-5 py-3 text-sm font-semibold text-black transition-colors hover:bg-brand-2 disabled:opacity-50"
+                >
+                  Entrar
+                </button>
+              </div>
+              <div className="text-sm text-muted sm:col-span-3">
+                {status.kind === "idle"
+                  ? "Listo."
+                  : status.kind === "loading"
+                    ? "Cargando..."
+                    : status.kind === "saving"
+                      ? "Guardando..."
+                      : status.kind === "ok"
                         ? status.message
-                        : null}
+                        : status.kind === "error"
+                          ? status.message
+                          : null}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="mt-5 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={load}
+                disabled={status.kind === "loading"}
+                className="rounded-2xl border border-card-border bg-card px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:border-brand/60 disabled:opacity-50"
+              >
+                Recargar
+              </button>
+              <div className="text-sm text-muted">
+                {status.kind === "idle"
+                  ? "Listo."
+                  : status.kind === "loading"
+                    ? "Cargando..."
+                    : status.kind === "saving"
+                      ? "Guardando..."
+                      : status.kind === "ok"
+                        ? status.message
+                        : status.kind === "error"
+                          ? status.message
+                          : null}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -416,10 +493,10 @@ export default function AdminPage() {
         </div>
 
         <div className="grid gap-8 lg:grid-cols-2">
-          <EditableTable
+          <EditableTable<PlayerKillsRow>
             title="Kills individuales (top)"
             rows={state?.topPlayerKills ?? []}
-            onChange={(rows) => setState((s) => ({ ...(s ?? emptyState()), topPlayerKills: rows as any }))}
+            onChange={(rows) => setState((s) => ({ ...(s ?? emptyState()), topPlayerKills: rows }))}
             columns={playerKillsColumns}
             addRow={() => ({
               pos: (state?.topPlayerKills?.length ?? 0) + 1,
@@ -430,10 +507,10 @@ export default function AdminPage() {
             })}
           />
 
-          <EditableTable
+          <EditableTable<TeamRankingRow>
             title="Ranking de equipos (top)"
             rows={state?.topTeams ?? []}
-            onChange={(rows) => setState((s) => ({ ...(s ?? emptyState()), topTeams: rows as any }))}
+            onChange={(rows) => setState((s) => ({ ...(s ?? emptyState()), topTeams: rows }))}
             columns={teamColumns}
             addRow={() => ({
               pos: (state?.topTeams?.length ?? 0) + 1,
@@ -483,6 +560,14 @@ export default function AdminPage() {
             teamA: "Equipo A",
             teamB: "Equipo B",
           })}
+        />
+
+        <EditableTable<Clan>
+          title="Clanes oficiales"
+          rows={state?.clanes ?? []}
+          onChange={(rows) => setState((s) => ({ ...(s ?? emptyState()), clanes: rows }))}
+          columns={clanesColumns}
+          addRow={() => ({ id: crypto.randomUUID(), name: "Nuevo clan" })}
         />
       </div>
     </div>
